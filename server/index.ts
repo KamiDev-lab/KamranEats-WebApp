@@ -1,46 +1,76 @@
-import express from "express";
-import dotenv from "dotenv";
-import connectDB from "./db/connectDB";
-import bodyParser from "body-parser";
-import cookieParser from "cookie-parser";
-import cors from "cors";
 import userRoute from "./routes/user.route";
 import restaurantRoute from "./routes/restaurant.route";
 import menuRoute from "./routes/menu.route";
 import orderRoute from "./routes/order.route";
-import path from "path";
+import express, { Request, Response, NextFunction } from "express";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import { stripeWebhook } from "./controller/order.controller";
 
 dotenv.config();
+const connectDB = (): Promise<void> => {
+    return Promise.resolve();
+};
+
+interface ProcessEnv {
+  NODE_ENV: "production" | "development" | "test";
+  PORT?: string;
+  VITE_FRONTEND_URL: string;
+  LOCAL_FRONTEND_URL: string;
+}
+
+declare const process: {
+  env: ProcessEnv;
+};
+
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+app.post("/api/v1/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 
-const DIRNAME = path.resolve();
+connectDB();
 
-// default middleware for any mern project
-app.use(bodyParser.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.json());
 app.use(cookieParser());
+
 const corsOptions = {
-    origin: "http://localhost:5173",
-    credentials: true
-}
+  origin: [process.env.VITE_FRONTEND_URL, process.env.LOCAL_FRONTEND_URL],
+  credentials: true,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  optionsSuccessStatus: 200,
+};
+
 app.use(cors(corsOptions));
 
-// api
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/restaurant", restaurantRoute);
 app.use("/api/v1/menu", menuRoute);
 app.use("/api/v1/order", orderRoute);
 
-app.use(express.static(path.join(DIRNAME,"/client/dist")));
-app.use("*",(_,res) => {
-    res.sendFile(path.resolve(DIRNAME, "client","dist","index.html"));
+app.use("*", (req: Request, res: Response) => {
+  res.status(404).json({
+    success: false,
+    message: "API route not found",
+  });
 });
 
-app.listen(PORT, () => {
-    connectDB();
-    console.log(`Server listen at port ${PORT}`);
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({
+    success: false,
+    message:
+      process.env.NODE_ENV === "production"
+        ? "Internal server error"
+        : err.message,
+  });
 });
+
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+export default app;
