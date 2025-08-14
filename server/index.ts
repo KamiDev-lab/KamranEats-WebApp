@@ -2,6 +2,7 @@ import userRoute from "./routes/user.route";
 import restaurantRoute from "./routes/restaurant.route";
 import menuRoute from "./routes/menu.route";
 import orderRoute from "./routes/order.route";
+import connectDB from "./db/connectDB";
 import express, { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
@@ -9,9 +10,7 @@ import cors from "cors";
 import { stripeWebhook } from "./controller/order.controller";
 
 dotenv.config();
-const connectDB = (): Promise<void> => {
-    return Promise.resolve();
-};
+
 
 interface ProcessEnv {
   NODE_ENV: "production" | "development" | "test";
