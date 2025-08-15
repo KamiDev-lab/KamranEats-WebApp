@@ -17,7 +17,7 @@ import { CartItem } from "@/types/cartType";
 
 const Cart = () => {
   const [open, setOpen] = useState<boolean>(false);
-  const { cart, decrementQuantity, incrementQuantity } = useCartStore();
+  const { cart, decrementQuantity, incrementQuantity, removeFromTheCart, clearCart } = useCartStore();
 
   let totalAmount = cart.reduce((acc, ele) => {
     return acc + ele.price * ele.quantity;
@@ -25,7 +25,7 @@ const Cart = () => {
   return (
     <div className="flex flex-col max-w-7xl mx-auto my-10">
       <div className="flex justify-end">
-        <Button variant="link">Clear All</Button>
+        <Button variant="link" onClick={clearCart}>Clear All</Button>
       </div>
       <Table>
         <TableHeader>
@@ -35,12 +35,13 @@ const Cart = () => {
             <TableHead>Price</TableHead>
             <TableHead>Quantity</TableHead>
             <TableHead>Total</TableHead>
+            {/* Add the 'Remove' header back */}
             <TableHead className="text-right">Remove</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {cart.map((item: CartItem) => (
-            <TableRow>
+            <TableRow key={item._id}>
               <TableCell>
                 <Avatar>
                   <AvatarImage src={item.image} alt="" />
@@ -48,11 +49,11 @@ const Cart = () => {
                 </Avatar>
               </TableCell>
               <TableCell> {item.name}</TableCell>
-              <TableCell> {item.price}</TableCell>
+              <TableCell> ${item.price}</TableCell>
               <TableCell>
                 <div className="w-fit flex items-center rounded-full border border-gray-100 dark:border-gray-800 shadow-md">
                   <Button
-                  onClick={() => decrementQuantity(item._id)}
+                    onClick={() => decrementQuantity(item._id)}
                     size={"icon"}
                     variant={"outline"}
                     className="rounded-full bg-gray-200"
@@ -68,7 +69,7 @@ const Cart = () => {
                     {item.quantity}
                   </Button>
                   <Button
-                  onClick={() => incrementQuantity(item._id)}
+                    onClick={() => incrementQuantity(item._id)}
                     size={"icon"}
                     className="rounded-full bg-orange hover:bg-hoverOrange"
                     variant={"outline"}
@@ -77,9 +78,14 @@ const Cart = () => {
                   </Button>
                 </div>
               </TableCell>
-              <TableCell>{item.price * item.quantity}</TableCell>
+              <TableCell>${item.price * item.quantity}</TableCell>
+              {/* Add the 'Remove' button with its onClick handler */}
               <TableCell className="text-right">
-                <Button size={"sm"} className="bg-orange hover:bg-hoverOrange">
+                <Button
+                  size={"sm"}
+                  className="bg-orange hover:bg-hoverOrange"
+                  onClick={() => removeFromTheCart(item._id)}
+                >
                   Remove
                 </Button>
               </TableCell>
@@ -88,8 +94,9 @@ const Cart = () => {
         </TableBody>
         <TableFooter>
           <TableRow className="text-2xl font-bold">
+            {/* Update the colspan to account for the new column */}
             <TableCell colSpan={5}>Total</TableCell>
-            <TableCell className="text-right">{totalAmount}</TableCell>
+            <TableCell className="text-right">${totalAmount}</TableCell>
           </TableRow>
         </TableFooter>
       </Table>

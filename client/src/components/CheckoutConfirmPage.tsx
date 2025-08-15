@@ -27,7 +27,8 @@ const CheckoutConfirmPage = ({
   const [input, setInput] = useState({
     name: user?.fullname || "",
     email: user?.email || "",
-    contact: user?.contact.toString() || "",
+    // Corrected code: Use a more robust check for `user` before accessing its properties.
+    contact: user?.contact?.toString() || "",
     address: user?.address || "",
     city: user?.city || "",
     country: user?.country || "",

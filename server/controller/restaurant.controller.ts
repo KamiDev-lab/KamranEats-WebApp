@@ -138,28 +138,35 @@ export const searchRestaurant = async (req: Request, res: Response) => {
         const searchText = req.params.searchText || "";
         const searchQuery = req.query.searchQuery as string || "";
         const selectedCuisines = (req.query.selectedCuisines as string || "").split(",").filter(cuisine => cuisine);
-        const query: any = {};
-        // basic search based on searchText (name ,city, country)
-        console.log(selectedCuisines);
         
+        const query: any = {};
+        const orConditions: any[] = []; // Use an array to collect all OR conditions
+
+        // Add search conditions for searchText
         if (searchText) {
-            query.$or = [
+            orConditions.push(
                 { restaurantName: { $regex: searchText, $options: 'i' } },
                 { city: { $regex: searchText, $options: 'i' } },
-                { country: { $regex: searchText, $options: 'i' } },
-            ]
+                { country: { $regex: searchText, $options: 'i' } }
+            );
         }
-        // filter on the basis of searchQuery
+
+        // Add search conditions for searchQuery
         if (searchQuery) {
-            query.$or = [
+            orConditions.push(
                 { restaurantName: { $regex: searchQuery, $options: 'i' } },
                 { cuisines: { $regex: searchQuery, $options: 'i' } }
-            ]
+            );
         }
-        // console.log(query);
-        // ["momos", "burger"]
-        if(selectedCuisines.length > 0){
-            query.cuisines = {$in:selectedCuisines}
+
+        // If any OR conditions exist, add them to the main query
+        if (orConditions.length > 0) {
+            query.$or = orConditions;
+        }
+
+        // Add the cuisines filter, which works in conjunction with the search terms
+        if (selectedCuisines.length > 0) {
+            query.cuisines = { $in: selectedCuisines };
         }
         
         const restaurants = await Restaurant.find(query);
