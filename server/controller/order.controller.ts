@@ -64,8 +64,8 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
             },
             line_items: lineItems,
             mode: 'payment',
-            success_url: `${process.env.LOCAL_FRONTEND_URL}/order/status`,
-            cancel_url: `${process.env.LOCAL_FRONTEND_URL}/cart`,
+            success_url: `${process.env.VITE_FRONTEND_URL}/order/status`,
+            cancel_url: `${process.env.VITE_FRONTEND_URL}/cart`,
             metadata: {
                 orderId: order._id.toString(),
                 images: JSON.stringify(menuItems.map((item: any) => item.image))
